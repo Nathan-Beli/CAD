@@ -100,6 +100,13 @@ function getRedirectUri() {
 }
 
 async function loadConfig() {
+  if (window.location.protocol === "file:") {
+    notice.textContent = "Tu es en file://. Double-clique cad/start-cad.bat puis ouvre http://localhost:4175/index.html.";
+    discordLoginBtn.disabled = true;
+    syncBtn.disabled = true;
+    return;
+  }
+
   try {
     const response = await fetch("/api/dashboard/config");
     if (!response.ok) throw new Error("Config indisponible");
@@ -112,8 +119,15 @@ async function loadConfig() {
     notice.textContent = payload.apiReady
       ? "Bot Discord detecte. Connecte-toi pour verifier tes roles."
       : "Configuration chargee.";
+    discordLoginBtn.disabled = !config.clientId;
+    syncBtn.disabled = !config.clientId;
+    if (!config.clientId) {
+      notice.textContent = "CLIENT_ID absent cote serveur. Verifie le .env charge par cad/server.mjs.";
+    }
   } catch {
     notice.textContent = "Ouvre ce CAD avec son serveur local, pas directement en file://.";
+    discordLoginBtn.disabled = true;
+    syncBtn.disabled = true;
   }
 }
 
@@ -122,7 +136,7 @@ async function buildDiscordLoginUrl() {
 
   const redirectUri = getRedirectUri();
   if (!redirectUri) {
-    throw new Error("Ouvre le CAD avec http://localhost:4175/index.html pour utiliser Discord.");
+    throw new Error("Tu es en file://. Lance cad/start-cad.bat et ouvre http://localhost:4175/index.html.");
   }
 
   if (!config.clientId) {

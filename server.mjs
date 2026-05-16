@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const botDir = resolve(__dirname, "..", "discord-bot");
-const envPaths = [join(__dirname, ".env"), resolve(__dirname, "..", "blainville-rp-dashboard-visuel", ".env")];
+const envPaths = [resolve(__dirname, "..", "blainville-rp-dashboard-visuel", ".env"), join(__dirname, ".env")];
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -36,7 +36,7 @@ function loadEnvFile(filePath) {
   );
 }
 
-const env = Object.assign({}, ...envPaths.map(loadEnvFile), process.env);
+const env = Object.assign({}, process.env, ...envPaths.map(loadEnvFile));
 Object.assign(process.env, env);
 
 const host = process.env.CAD_HOST || "0.0.0.0";
