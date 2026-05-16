@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const botDir = resolve(__dirname, "..", "discord-bot");
 const envPaths = [resolve(__dirname, "..", "blainville-rp-dashboard-visuel", ".env"), join(__dirname, ".env")];
+const fallbackGuildId = "1482748692711866399";
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -36,12 +37,33 @@ function loadEnvFile(filePath) {
   );
 }
 
-const env = Object.assign({}, process.env, ...envPaths.map(loadEnvFile));
+const fileEnv = Object.assign({}, ...envPaths.map(loadEnvFile));
+const env = { ...fileEnv };
+
+for (const [key, value] of Object.entries(process.env)) {
+  if (value !== undefined && value !== "") {
+    env[key] = value;
+  }
+}
+
+if (!/^\d{17,20}$/.test(env.GUILD_ID || "") && /^\d{17,20}$/.test(fileEnv.GUILD_ID || "")) {
+  env.GUILD_ID = fileEnv.GUILD_ID;
+}
+
+if (!/^\d{17,20}$/.test(env.GUILD_ID || "")) {
+  env.GUILD_ID = fallbackGuildId;
+}
+
+if (!/^\d{17,20}$/.test(env.CLIENT_ID || "") && /^\d{17,20}$/.test(fileEnv.CLIENT_ID || "")) {
+  env.CLIENT_ID = fileEnv.CLIENT_ID;
+}
+
 Object.assign(process.env, env);
 
 const host = process.env.CAD_HOST || "0.0.0.0";
-const port = Number(process.env.CAD_PORT || 4175);
-const botApiUrl = process.env.DASHBOARD_API_URL || "http://127.0.0.1:4174";
+const port = Number(process.env.PORT || process.env.CAD_PORT || 4175);
+const botApiPort = String(process.env.DASHBOARD_API_PORT || 4174);
+const botApiUrl = process.env.DASHBOARD_API_URL || `http://127.0.0.1:${botApiPort}`;
 let botProcess = null;
 
 function sendJson(response, statusCode, payload) {
@@ -64,7 +86,12 @@ function startBot() {
 
   botProcess = spawn(process.execPath, [botEntry], {
     cwd: botDir,
-    env: { ...process.env, ...env },
+    env: {
+      ...process.env,
+      ...env,
+      PORT: botApiPort,
+      DASHBOARD_API_PORT: botApiPort,
+    },
     stdio: "inherit",
     windowsHide: true,
   });
@@ -125,7 +152,10 @@ const server = createServer(async (request, response) => {
 startBot();
 
 server.listen(port, host, () => {
-  console.log(`CAD disponible sur http://localhost:${port}`);
+  const publicUrl = process.env.RAILWAY_PUBLIC_DOMAIN
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+  console.log(`CAD disponible sur ${publicUrl}`);
 });
 
 process.on("SIGINT", () => {
