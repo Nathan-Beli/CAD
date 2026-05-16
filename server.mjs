@@ -66,6 +66,19 @@ const botApiPort = String(process.env.DASHBOARD_API_PORT || 4174);
 const botApiUrl = process.env.DASHBOARD_API_URL || `http://127.0.0.1:${botApiPort}`;
 let botProcess = null;
 
+const shouldStartBot =
+  process.env.CAD_START_BOT === "true" ||
+  (
+    process.env.CAD_START_BOT !== "false" &&
+    (
+      process.env.RAILWAY_ENVIRONMENT ||
+      process.env.RAILWAY_SERVICE_ID ||
+      process.env.RENDER_EXTERNAL_URL ||
+      process.env.NODE_ENV === "production"
+    )
+  );
+const hasExternalBotApi = Boolean(process.env.DASHBOARD_API_URL);
+
 function sendJson(response, statusCode, payload) {
   response.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
@@ -75,7 +88,11 @@ function sendJson(response, statusCode, payload) {
 }
 
 function startBot() {
-  if (process.env.CAD_START_BOT === "false") return;
+  if (!shouldStartBot) {
+    console.log("Bot Discord non demarre localement. Mets CAD_START_BOT=true pour le lancer avec le CAD.");
+    return;
+  }
+
   if (!process.env.DISCORD_TOKEN) {
     console.warn("DISCORD_TOKEN manquant: bot non demarre.");
     return;
@@ -94,6 +111,14 @@ function startBot() {
     },
     stdio: "inherit",
     windowsHide: true,
+  });
+
+  botProcess.on("exit", (code) => {
+    console.warn(`Bot Discord arrete avec le code ${code}. Le portail CAD reste en ligne.`);
+  });
+
+  botProcess.on("error", (error) => {
+    console.warn(`Bot Discord impossible a lancer: ${error.message}`);
   });
 }
 
@@ -120,7 +145,7 @@ const server = createServer(async (request, response) => {
         clientId: process.env.CLIENT_ID || "",
         guildId: process.env.GUILD_ID || "",
         apiBaseUrl: "",
-        apiReady: true,
+        apiReady: shouldStartBot || hasExternalBotApi,
       });
     }
 

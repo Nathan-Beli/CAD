@@ -125,7 +125,7 @@ async function loadConfig() {
       notice.textContent = "CLIENT_ID absent cote serveur. Verifie le .env charge par cad/server.mjs.";
     }
   } catch {
-    notice.textContent = "Ouvre ce CAD avec son serveur local, pas directement en file://.";
+    notice.textContent = "Serveur CAD/API inaccessible. Relance cad/start-cad.bat puis rafraichis la page.";
     discordLoginBtn.disabled = true;
     syncBtn.disabled = true;
   }

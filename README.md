@@ -39,6 +39,8 @@ DISCORD_TOKEN=token_du_bot
 CLIENT_ID=id_application_discord
 GUILD_ID=id_du_serveur_discord
 DASHBOARD_API_PORT=4174
+CAD_START_BOT=true
+NODE_ENV=production
 ```
 
 Dans le Discord Developer Portal, ajoute l'URL hebergee exacte comme Redirect URI OAuth2, par exemple:
