@@ -3,6 +3,7 @@ const discordAuthUrl = "https://discord.com/oauth2/authorize";
 const discordStateKey = "blainville-cad-discord-state";
 const storageKey = "blainville-cad-access-v2";
 const medicalForumChannelId = "1483574322399416320";
+const bypassRoleCheck = true;
 
 const services = [
   {
@@ -303,6 +304,7 @@ async function syncProfile() {
 
 function hasService(service) {
   if (service.comingSoon) return false;
+  if (bypassRoleCheck) return true;
   return state.session.cadServices.some((allowed) => allowed.roleId === service.roleId);
 }
 
@@ -351,7 +353,7 @@ function renderServices() {
     .map((service) => {
       const unlocked = hasService(service);
       const disabled = !unlocked || service.comingSoon;
-      const label = service.comingSoon ? "Coming soon" : unlocked ? "Acces autorise" : "Role requis";
+      const label = service.comingSoon ? "Coming soon" : bypassRoleCheck ? "Acces temporaire sans role" : unlocked ? "Acces autorise" : "Role requis";
       return `
         <button class="service-card ${unlocked ? "" : "locked"} ${service.comingSoon ? "soon" : ""}" type="button" data-service="${service.id}" ${disabled ? "disabled" : ""}>
           <span class="service-logo" data-fallback="${initials(service.shortName || service.name)}">
