@@ -1,84 +1,138 @@
-# CAD - Portail d'acces Blainville RP QC
+# Blainville RP QC - Bot Discord Banque
 
-Cette version repart a zero et sert seulement de portail d'acces par roles Discord.
+Bot Discord en Node.js avec `discord.js`.
 
-## Lancement
+## Fonctions incluses
+
+- `/solde` pour voir son solde.
+- `/banque-menu` pour envoyer le menu bancaire avec les boutons.
+- `/virement` pour envoyer de l'argent avec une mention `@membre`.
+- `/facture-ajouter` pour ajouter une facture a un membre avec le type `amende` ou `entreprise`.
+- `/facture-payer` pour payer une facture.
+- `/staff ajouter-argent` pour ajouter de l'argent a un joueur.
+- `/staff retirer-facture` pour retirer une facture a un joueur.
+- Bouton `Banque` pour voir son compte.
+- Bouton `Prendre mon salaire` avec cooldown de 24 heures.
+- Bouton `Virement` pour envoyer de l'argent a un autre membre avec une mention.
+- Bouton `Facture` pour voir et payer ses factures.
+- Stockage local dans `src/data/bank.json`.
+
+## Types de factures
+
+- `amende`: l'argent est retire du joueur et ne va a personne.
+- `entreprise`: l'argent est retire du joueur et envoye a la personne qui a cree la facture.
+
+## Staff et logs
+
+- Role staff autorise: `1484018086129696868`.
+- Salon logs: `1498847787540942988`.
+- Seules les sous-commandes `/staff ajouter-argent` et `/staff retirer-facture` envoient des logs.
+
+## Installation
 
 ```bash
-npm start
+npm.cmd install
 ```
 
-Ou double-clique:
+Copie `.env.example` vers `.env`, puis remplis:
+
+```env
+DISCORD_TOKEN=ton_token
+CLIENT_ID=id_de_ton_application
+GUILD_ID=id_de_ton_serveur
+```
+
+Ne partage jamais le token du bot.
+
+## GitHub et securite
+
+Le vrai fichier `.env` est ignore par `.gitignore`. Pour GitHub, pousse seulement:
 
 ```txt
-cad/start-cad.bat
+.env.example
 ```
 
-Ouvre ensuite:
+Si tu heberges le bot, ajoute les secrets directement dans les variables d'environnement de l'hebergeur:
 
-```txt
-http://localhost:4175/index.html
-```
+- `DISCORD_TOKEN`
+- `CLIENT_ID`
+- `GUILD_ID`
 
-Le serveur lit le `.env` du dossier `cad` si present, sinon celui de `blainville-rp-dashboard-visuel`.
+Si un token a deja ete public sur GitHub, il faut le regenerer dans le Discord Developer Portal.
 
-## Hebergement
+## Lancer le bot seul
 
-La commande de demarrage doit etre:
+Deploie les commandes slash sur ton serveur:
 
 ```bash
-npm start
+npm.cmd run deploy
 ```
 
-Le serveur utilise automatiquement `PORT` quand l'hebergeur le fournit. Le bot Discord est lance par le serveur CAD et son API interne utilise `DASHBOARD_API_PORT`, par defaut `4174`, pour ne pas entrer en conflit avec le port public du site.
+Puis demarre le bot:
 
-Variables a mettre sur l'hebergeur:
-
-```env
-DISCORD_TOKEN=token_du_bot
-CLIENT_ID=id_application_discord
-GUILD_ID=id_du_serveur_discord
-DASHBOARD_API_PORT=4174
-CAD_START_BOT=true
-NODE_ENV=production
+```bash
+npm.cmd start
 ```
 
-Optionnel pour brancher ERLC:
-
-```env
-ERLC_STATE_URL=https://ton-api-erlc.example/state
-ERLC_API_KEY=cle_api_erlc
-```
-
-Le salon/forum des dossiers medicaux SPALL utilise:
+Quand le bot est lance, il demarre aussi une API locale pour le dashboard:
 
 ```txt
-1483574322399416320
+http://127.0.0.1:4174/api/dashboard/me?userId=ID_DISCORD
 ```
 
-Dans le Discord Developer Portal, ajoute l'URL hebergee exacte comme Redirect URI OAuth2, par exemple:
+Le dashboard doit etre ouvert en local pour la connexion Discord:
 
 ```txt
-https://ton-site.up.railway.app/index.html
+http://127.0.0.1:4173/index.html
 ```
 
-## Roles CAD
+Dans le portail Discord Developer, ajoute cette Redirect URI OAuth2:
 
-- Surete du Quebec: `1484018631653330954`
-- SPVB: `1484161421448056943`
-- SIVB: `1484368916812660746`
-- SPALL: `1484347605713424495`
-- MTQ: `1484743685248913538`
+```txt
+http://127.0.0.1:4173/index.html
+```
 
-Le bot Discord renvoie les acces dans `profile.cadServices` via `/api/dashboard/me?userId=...`.
+Le dashboard synchronise automatiquement:
 
-## Fonctionnement actuel
+- le nom Discord;
+- les roles Discord;
+- le role dashboard `staff` si le membre a le role `1484018086129696868`;
+- le solde bancaire;
+- les factures du bot.
 
-- La carte civile sauvegarde prenom et nom dans le navigateur.
-- Les boutons SQ, SPVB, SIVB, SPALL et MTQ se deverrouillent selon les roles Discord.
-- Repartisseur 911 est visible en coming soon.
-- Apres le choix du service, le CAD demande matricule, grade et subdivision.
-- GTI est disponible seulement pour SQ.
-- Les panneaux ERLC sont prets a recevoir les appels, unites, mandats et positions via `ERLC_STATE_URL`.
-- Les dossiers medicaux SPALL sont importes par le bot depuis le salon/forum Discord quand le bot est en ligne.
-- Le suivi SHIFT est reserve aux equipes police SQ/SPVB; le bouton SHIFT est visible pour les roles directeur/direction/staff.
+## Lancer dashboard + bot ensemble
+
+Tu peux maintenant lancer le site depuis:
+
+```txt
+..\blainville-rp-dashboard-visuel\start-dashboard.bat
+```
+
+Le dashboard lit son propre `.env`, lance le bot avec ces infos, puis sert le site sur:
+
+```txt
+http://127.0.0.1:4173/index.html
+```
+
+Active dans le portail Discord:
+
+- Server Members Intent
+- Message Content Intent
+
+Le Message Content Intent est necessaire pour afficher les arrestations venant des salons:
+
+- `1482756676745564284`
+- `1482754417173332188`
+
+## Permissions Discord
+
+Invite le bot avec les scopes:
+
+- `bot`
+- `applications.commands`
+
+Permissions utiles:
+
+- View Channels
+- Send Messages
+- Use Slash Commands
