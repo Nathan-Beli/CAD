@@ -101,6 +101,8 @@ function startBot() {
   const botEntry = resolve(botDir, "src", "index.js");
   if (!existsSync(botEntry)) return;
 
+  console.log(`Demarrage du bot Discord avec API interne sur ${botApiUrl}`);
+
   botProcess = spawn(process.execPath, [botEntry], {
     cwd: botDir,
     env: {
@@ -195,6 +197,15 @@ async function getMedicalRecords(url) {
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${host}:${port}`);
+
+    if (request.method === "GET" && url.pathname === "/healthz") {
+      return sendJson(response, 200, {
+        ok: true,
+        service: "cad",
+        botMode: shouldStartBot ? "enabled" : "disabled",
+        apiPort: botApiPort,
+      });
+    }
 
     if (url.pathname === "/api/dashboard/config") {
       return sendJson(response, 200, {
