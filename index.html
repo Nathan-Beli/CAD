@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blainville RP QC | Acces CAD</title>
+    <title>Blainville RP QC | CAD</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -14,7 +14,7 @@
   </head>
   <body>
     <main class="site-shell">
-      <section class="hero">
+      <section id="portalView">
         <nav class="topbar">
           <a class="brand" href="./index.html">
             <img
@@ -27,7 +27,7 @@
             </span>
           </a>
 
-          <div class="session-card" id="sessionCard">
+          <div class="session-card">
             <span class="status-dot"></span>
             <div>
               <strong id="sessionName">Non connecte</strong>
@@ -36,56 +36,84 @@
           </div>
         </nav>
 
-        <div class="hero-grid">
-          <article class="hero-copy">
-            <p class="eyebrow">Acces role Discord</p>
-            <h1>Choisis ton service pour entrer dans le CAD.</h1>
+        <div class="portal-grid">
+          <section class="hero-copy">
+            <p class="eyebrow">Connexion Discord</p>
+            <h1>Connecte ton compte et cree ta carte civile.</h1>
             <p>
-              Le bot Discord verifie tes roles sur le serveur. Si tu as un role autorise,
-              ton bouton CAD apparait ici automatiquement.
+              Le bot Discord detecte tes roles et affiche seulement les services CAD auxquels tu as acces.
             </p>
+
+            <form id="civilForm" class="civil-form">
+              <label>
+                <span>Prenom</span>
+                <input id="firstName" name="firstName" placeholder="Prenom RP" required />
+              </label>
+              <label>
+                <span>Nom</span>
+                <input id="lastName" name="lastName" placeholder="Nom RP" required />
+              </label>
+              <button class="btn" type="submit">Sauvegarder carte civile</button>
+            </form>
+
             <div class="hero-actions">
               <button class="btn primary" id="discordLoginBtn" type="button">Connexion Discord</button>
               <button class="btn" id="syncBtn" type="button">Verifier mes roles</button>
-              <a class="btn" href="http://localhost:4175/index.html">Ouvrir en serveur local</a>
               <button class="btn ghost hidden" id="logoutBtn" type="button">Deconnexion</button>
             </div>
             <p class="notice" id="notice">Lance le serveur CAD pour utiliser la connexion Discord.</p>
-          </article>
+          </section>
 
           <aside class="access-panel">
-            <p class="eyebrow">Services disponibles</p>
+            <p class="eyebrow">Carte civile</p>
+            <article class="civil-card">
+              <span>Identite RP</span>
+              <strong id="civilCardName">Non creee</strong>
+              <small id="civilCardDiscord">Aucun compte Discord</small>
+            </article>
+
+            <p class="eyebrow services-title">Services disponibles</p>
             <div id="serviceButtons" class="service-grid"></div>
           </aside>
         </div>
       </section>
 
-      <section class="cad-area hidden" id="cadArea">
-        <header class="cad-header">
+      <section class="department-login hidden" id="departmentLogin">
+        <button class="btn" id="loginBackBtn" type="button">Retour au portail</button>
+        <form id="departmentForm" class="login-panel">
+          <p class="eyebrow" id="loginServiceLabel">Service</p>
+          <h2>Identification CAD</h2>
+          <label>
+            <span>Matricule</span>
+            <input id="unitNumber" name="unitNumber" placeholder="Ex: 421" required />
+          </label>
+          <label>
+            <span>Grade</span>
+            <input id="rank" name="rank" placeholder="Ex: Agent, Sergent, Capitaine" required />
+          </label>
+          <label>
+            <span>Subdivision</span>
+            <select id="subdivision" name="subdivision"></select>
+          </label>
+          <button class="btn primary" type="submit">Entrer dans le CAD</button>
+        </form>
+      </section>
+
+      <section class="cad-screen hidden" id="cadView">
+        <header class="cad-topbar">
           <div>
             <p class="eyebrow" id="cadServiceLabel">Service</p>
             <h2 id="cadTitle">CAD</h2>
+            <small id="operatorLine">Operateur non identifie</small>
           </div>
-          <button class="btn" id="backBtn" type="button">Retour au portail</button>
+          <div class="cad-actions">
+            <button class="btn" id="shiftBtn" type="button">Debuter shift</button>
+            <button class="btn" id="shiftSummaryBtn" type="button">SHIFT</button>
+            <button class="btn" id="cadBackBtn" type="button">Changer service</button>
+          </div>
         </header>
 
-        <div class="cad-grid">
-          <article class="panel">
-            <p class="eyebrow">Statut</p>
-            <h3>Session CAD ouverte</h3>
-            <p id="cadStatus">Acces confirme par role Discord.</p>
-          </article>
-          <article class="panel">
-            <p class="eyebrow">Dispatch</p>
-            <h3>Appels et unites</h3>
-            <p>Les fonctions internes du service seront ajoutees dans la prochaine etape.</p>
-          </article>
-          <article class="panel">
-            <p class="eyebrow">Dossiers</p>
-            <h3>Rapports, BOLO, mandats</h3>
-            <p>Structure prete pour brancher les modules specifiques au service.</p>
-          </article>
-        </div>
+        <div class="cad-grid" id="cadGrid"></div>
       </section>
     </main>
 

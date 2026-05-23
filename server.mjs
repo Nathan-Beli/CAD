@@ -136,6 +136,62 @@ async function proxyBotApi(request, response, url) {
   }
 }
 
+async function getErlcState(service) {
+  const stateUrl = process.env.ERLC_STATE_URL || process.env.ERLC_API_URL || "";
+
+  if (!stateUrl) {
+    return {
+      source: "not_configured",
+      message: "Aucun endpoint ERLC configure.",
+      calls: [],
+      units: [],
+      warrants: [],
+      mapUnits: [],
+      service,
+    };
+  }
+
+  const target = new URL(stateUrl);
+  target.searchParams.set("service", service);
+
+  const erlcResponse = await fetch(target, {
+    headers: {
+      Accept: "application/json",
+      ...(process.env.ERLC_API_KEY ? { Authorization: `Bearer ${process.env.ERLC_API_KEY}` } : {}),
+    },
+  });
+
+  if (!erlcResponse.ok) {
+    throw new Error(`ERLC API ${erlcResponse.status}`);
+  }
+
+  const payload = await erlcResponse.json();
+
+  return {
+    source: "erlc",
+    message: payload.message || "Flux ERLC connecte.",
+    calls: payload.calls || [],
+    units: payload.units || [],
+    warrants: payload.warrants || [],
+    mapUnits: payload.mapUnits || payload.units || [],
+    service,
+  };
+}
+
+async function getMedicalRecords(url) {
+  try {
+    const target = new URL(url.pathname + url.search, botApiUrl);
+    const botResponse = await fetch(target, { method: "GET" });
+    const payload = await botResponse.json().catch(() => ({}));
+    if (!botResponse.ok || payload.ok === false) {
+      throw new Error(payload.reason || "Bot API indisponible.");
+    }
+    return payload.records || [];
+  } catch {
+    return [];
+  }
+}
+
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${host}:${port}`);
@@ -146,6 +202,28 @@ const server = createServer(async (request, response) => {
         guildId: process.env.GUILD_ID || "",
         apiBaseUrl: "",
         apiReady: shouldStartBot || hasExternalBotApi,
+      });
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/cad/erlc-state") {
+      const service = url.searchParams.get("service") || "all";
+      try {
+        return sendJson(response, 200, {
+          ok: true,
+          state: await getErlcState(service),
+        });
+      } catch (error) {
+        return sendJson(response, 502, {
+          ok: false,
+          reason: error instanceof Error ? error.message : "ERLC API indisponible.",
+        });
+      }
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/cad/medical-records") {
+      return sendJson(response, 200, {
+        ok: true,
+        records: await getMedicalRecords(url),
       });
     }
 

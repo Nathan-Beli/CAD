@@ -43,6 +43,19 @@ CAD_START_BOT=true
 NODE_ENV=production
 ```
 
+Optionnel pour brancher ERLC:
+
+```env
+ERLC_STATE_URL=https://ton-api-erlc.example/state
+ERLC_API_KEY=cle_api_erlc
+```
+
+Le salon/forum des dossiers medicaux SPALL utilise:
+
+```txt
+1483574322399416320
+```
+
 Dans le Discord Developer Portal, ajoute l'URL hebergee exacte comme Redirect URI OAuth2, par exemple:
 
 ```txt
@@ -58,3 +71,14 @@ https://ton-site.up.railway.app/index.html
 - MTQ: `1484743685248913538`
 
 Le bot Discord renvoie les acces dans `profile.cadServices` via `/api/dashboard/me?userId=...`.
+
+## Fonctionnement actuel
+
+- La carte civile sauvegarde prenom et nom dans le navigateur.
+- Les boutons SQ, SPVB, SIVB, SPALL et MTQ se deverrouillent selon les roles Discord.
+- Repartisseur 911 est visible en coming soon.
+- Apres le choix du service, le CAD demande matricule, grade et subdivision.
+- GTI est disponible seulement pour SQ.
+- Les panneaux ERLC sont prets a recevoir les appels, unites, mandats et positions via `ERLC_STATE_URL`.
+- Les dossiers medicaux SPALL sont importes par le bot depuis le salon/forum Discord quand le bot est en ligne.
+- Le suivi SHIFT est reserve aux equipes police SQ/SPVB; le bouton SHIFT est visible pour les roles directeur/direction/staff.
