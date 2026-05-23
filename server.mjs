@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,6 +9,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const botDir = resolve(__dirname, "..", "discord-bot");
 const envPaths = [resolve(__dirname, "..", "blainville-rp-dashboard-visuel", ".env"), join(__dirname, ".env")];
 const fallbackGuildId = "1482748692711866399";
+const dataDir = join(__dirname, "data");
+const erlcConfigPath = join(dataDir, "erlc-config.json");
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -87,6 +89,57 @@ function sendJson(response, statusCode, payload) {
   response.end(JSON.stringify(payload));
 }
 
+function readJsonBody(request) {
+  return new Promise((resolve, reject) => {
+    let body = "";
+    request.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 1024 * 128) {
+        request.destroy();
+        reject(new Error("Payload trop grand."));
+      }
+    });
+    request.on("end", () => {
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch {
+        reject(new Error("JSON invalide."));
+      }
+    });
+    request.on("error", reject);
+  });
+}
+
+async function loadErlcConfig() {
+  const envUrl = process.env.ERLC_STATE_URL || process.env.ERLC_API_URL || "";
+  const envKey = process.env.ERLC_API_KEY || "";
+
+  let stored = {};
+  try {
+    stored = JSON.parse(await readFile(erlcConfigPath, "utf8"));
+  } catch {
+    stored = {};
+  }
+
+  return {
+    stateUrl: envUrl || stored.stateUrl || "",
+    apiKey: envKey || stored.apiKey || "",
+    savedAt: stored.savedAt || "",
+    source: envUrl ? "env" : stored.stateUrl ? "server" : "none",
+  };
+}
+
+async function saveErlcConfig(config) {
+  await mkdir(dataDir, { recursive: true });
+  const payload = {
+    stateUrl: String(config.stateUrl || "").trim(),
+    apiKey: String(config.apiKey || "").trim(),
+    savedAt: new Date().toISOString(),
+  };
+  await writeFile(erlcConfigPath, JSON.stringify(payload, null, 2));
+  return payload;
+}
+
 function startBot() {
   if (!shouldStartBot) {
     console.log("Bot Discord non demarre localement. Mets CAD_START_BOT=true pour le lancer avec le CAD.");
@@ -139,7 +192,8 @@ async function proxyBotApi(request, response, url) {
 }
 
 async function getErlcState(service) {
-  const stateUrl = process.env.ERLC_STATE_URL || process.env.ERLC_API_URL || "";
+  const erlcConfig = await loadErlcConfig();
+  const stateUrl = erlcConfig.stateUrl;
 
   if (!stateUrl) {
     return {
@@ -159,7 +213,7 @@ async function getErlcState(service) {
   const erlcResponse = await fetch(target, {
     headers: {
       Accept: "application/json",
-      ...(process.env.ERLC_API_KEY ? { Authorization: `Bearer ${process.env.ERLC_API_KEY}` } : {}),
+      ...(erlcConfig.apiKey ? { Authorization: `Bearer ${erlcConfig.apiKey}` } : {}),
     },
   });
 
@@ -208,11 +262,54 @@ const server = createServer(async (request, response) => {
     }
 
     if (url.pathname === "/api/dashboard/config") {
+      const erlcConfig = await loadErlcConfig();
       return sendJson(response, 200, {
         clientId: process.env.CLIENT_ID || "",
         guildId: process.env.GUILD_ID || "",
         apiBaseUrl: "",
         apiReady: shouldStartBot || hasExternalBotApi,
+        erlcConfigured: Boolean(erlcConfig.stateUrl),
+        erlcSource: erlcConfig.source,
+      });
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/cad/erlc-config") {
+      const erlcConfig = await loadErlcConfig();
+      return sendJson(response, 200, {
+        ok: true,
+        config: {
+          stateUrl: erlcConfig.stateUrl,
+          hasApiKey: Boolean(erlcConfig.apiKey),
+          savedAt: erlcConfig.savedAt,
+          source: erlcConfig.source,
+        },
+      });
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/cad/erlc-config") {
+      const body = await readJsonBody(request);
+      const stateUrl = String(body.stateUrl || "").trim();
+
+      if (!/^https?:\/\//i.test(stateUrl)) {
+        return sendJson(response, 400, {
+          ok: false,
+          reason: "URL ERLC invalide. Elle doit commencer par http:// ou https://.",
+        });
+      }
+
+      const saved = await saveErlcConfig({
+        stateUrl,
+        apiKey: body.apiKey || "",
+      });
+
+      return sendJson(response, 200, {
+        ok: true,
+        config: {
+          stateUrl: saved.stateUrl,
+          hasApiKey: Boolean(saved.apiKey),
+          savedAt: saved.savedAt,
+          source: "server",
+        },
       });
     }
 

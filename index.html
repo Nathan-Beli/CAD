@@ -74,6 +74,20 @@
 
             <p class="eyebrow services-title">Services disponibles</p>
             <div id="serviceButtons" class="service-grid"></div>
+
+            <form id="erlcConfigForm" class="erlc-config">
+              <p class="eyebrow">Connexion ERLC</p>
+              <label>
+                <span>URL API ERLC</span>
+                <input id="erlcStateUrl" name="stateUrl" placeholder="https://ton-api-erlc.example/state" />
+              </label>
+              <label>
+                <span>Cle API ERLC</span>
+                <input id="erlcApiKey" name="apiKey" placeholder="Cle API / token" type="password" />
+              </label>
+              <button class="btn" type="submit">Sauvegarder ERLC</button>
+              <small id="erlcConfigStatus">Aucune API ERLC connectee.</small>
+            </form>
           </aside>
         </div>
       </section>

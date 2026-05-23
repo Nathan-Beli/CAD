@@ -102,6 +102,30 @@ ERLC_STATE_URL=https://ton-api-erlc.example/state
 ERLC_API_KEY=cle_api_erlc
 ```
 
+Tu peux aussi mettre ces informations directement dans un fichier. Cree ce fichier:
+
+```txt
+cad/data/erlc-config.json
+```
+
+Exemple:
+
+```json
+{
+  "stateUrl": "https://ton-api-erlc.example/state",
+  "apiKey": "ta-cle-api-erlc",
+  "savedAt": ""
+}
+```
+
+Un modele est disponible ici:
+
+```txt
+cad/data/erlc-config.json.example
+```
+
+Le vrai fichier `cad/data/erlc-config.json` est ignore par git parce qu'il peut contenir une cle API.
+
 Le salon/forum des dossiers medicaux SPALL utilise:
 
 ```txt

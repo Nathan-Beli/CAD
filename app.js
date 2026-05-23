@@ -41,8 +41,8 @@ const services = [
   },
   {
     id: "spall",
-    name: "SPALL",
-    shortName: "SPALL",
+    name: "SPLL",
+    shortName: "SPLL",
     roleId: "1484347605713424495",
     logoUrl: "https://www.facebook.com/spllofficiel/",
     unitFilter: ["ems", "spall"],
@@ -98,6 +98,10 @@ const firstName = document.querySelector("#firstName");
 const lastName = document.querySelector("#lastName");
 const civilCardName = document.querySelector("#civilCardName");
 const civilCardDiscord = document.querySelector("#civilCardDiscord");
+const erlcConfigForm = document.querySelector("#erlcConfigForm");
+const erlcStateUrl = document.querySelector("#erlcStateUrl");
+const erlcApiKey = document.querySelector("#erlcApiKey");
+const erlcConfigStatus = document.querySelector("#erlcConfigStatus");
 const serviceButtons = document.querySelector("#serviceButtons");
 const discordLoginBtn = document.querySelector("#discordLoginBtn");
 const syncBtn = document.querySelector("#syncBtn");
@@ -182,6 +186,9 @@ async function loadConfig() {
     notice.textContent = config.clientId
       ? "Connecte-toi avec Discord, puis verifie tes roles."
       : "CLIENT_ID absent cote serveur. Verifie les variables d'environnement.";
+    if (payload.erlcConfigured) {
+      erlcConfigStatus.textContent = `ERLC connecte (${payload.erlcSource}).`;
+    }
   } catch {
     config = {
       clientId: "1498839231429218354",
@@ -191,6 +198,46 @@ async function loadConfig() {
     notice.textContent = "Mode portail seulement: la connexion Discord peut ouvrir, mais les roles demandent le serveur CAD/API.";
     discordLoginBtn.disabled = false;
     syncBtn.disabled = false;
+  }
+}
+
+async function loadErlcConfig() {
+  try {
+    const payload = await apiFetch("/api/cad/erlc-config");
+    erlcStateUrl.value = payload.config?.stateUrl || "";
+    erlcApiKey.value = "";
+    erlcConfigStatus.textContent = payload.config?.stateUrl
+      ? `ERLC connecte (${payload.config.source}). Cle: ${payload.config.hasApiKey ? "oui" : "non"}.`
+      : "Aucune API ERLC connectee.";
+  } catch {
+    erlcConfigStatus.textContent = "Config ERLC indisponible tant que le serveur CAD/API ne repond pas.";
+  }
+}
+
+async function saveErlcConfig(event) {
+  event.preventDefault();
+  const stateUrl = erlcStateUrl.value.trim();
+  const apiKey = erlcApiKey.value.trim();
+
+  if (!stateUrl) {
+    erlcConfigStatus.textContent = "Entre l'URL de ton API ERLC.";
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/cad/erlc-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stateUrl, apiKey }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.ok === false) {
+      throw new Error(payload.reason || "Sauvegarde impossible.");
+    }
+    erlcApiKey.value = "";
+    erlcConfigStatus.textContent = "API ERLC sauvegardee. Les CAD utiliseront ce serveur.";
+  } catch (error) {
+    erlcConfigStatus.textContent = error instanceof Error ? error.message : "Connexion ERLC impossible.";
   }
 }
 
@@ -386,13 +433,18 @@ function showDepartmentLogin(serviceId) {
   const operator = state.operators[serviceId] || {};
   unitNumber.value = operator.unitNumber || "";
   rank.value = operator.rank || "";
-  subdivision.innerHTML = getSubdivisions(service).map((item) => `<option ${operator.subdivision === item ? "selected" : ""}>${item}</option>`).join("");
+  const subdivisionLabel = subdivision.closest("label");
+  const subdivisions = getSubdivisions(service);
+  subdivisionLabel.classList.remove("hidden");
+  subdivision.required = true;
+  subdivision.innerHTML = subdivisions.map((item) => `<option ${operator.subdivision === item ? "selected" : ""}>${item}</option>`).join("");
   portalView.classList.add("hidden");
   departmentLogin.classList.remove("hidden");
   cadView.classList.add("hidden");
 }
 
 function getSubdivisions(service) {
+  if (["sivb", "spall", "mtq"].includes(service.id)) return ["Superviseur"];
   const base = ["Enqueteur", "Superviseur", "Patrouille", "K9"];
   return service.id === "sq" ? ["GTI", ...base] : base;
 }
@@ -755,6 +807,8 @@ civilForm.addEventListener("submit", (event) => {
   notice.textContent = "Carte civile sauvegardee.";
 });
 
+erlcConfigForm.addEventListener("submit", saveErlcConfig);
+
 discordLoginBtn.addEventListener("click", async () => {
   try {
     window.location.href = await buildDiscordLoginUrl();
@@ -805,5 +859,6 @@ cadGrid.addEventListener("submit", (event) => {
 });
 
 await loadConfig();
+await loadErlcConfig();
 await handleDiscordCallback();
 render();
