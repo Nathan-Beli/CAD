@@ -75,8 +75,8 @@ const services = [
 ];
 
 let config = {
-  clientId: "",
-  guildId: "",
+  clientId: "1498839231429218354",
+  guildId: "1482748692711866399",
   apiBaseUrl: "",
 };
 
@@ -182,9 +182,14 @@ async function loadConfig() {
       ? "Connecte-toi avec Discord, puis verifie tes roles."
       : "CLIENT_ID absent cote serveur. Verifie les variables d'environnement.";
   } catch {
-    notice.textContent = "Serveur CAD/API inaccessible. Relance le serveur puis rafraichis.";
-    discordLoginBtn.disabled = true;
-    syncBtn.disabled = true;
+    config = {
+      clientId: "1498839231429218354",
+      guildId: "1482748692711866399",
+      apiBaseUrl: "",
+    };
+    notice.textContent = "Mode portail seulement: la connexion Discord peut ouvrir, mais les roles demandent le serveur CAD/API.";
+    discordLoginBtn.disabled = false;
+    syncBtn.disabled = false;
   }
 }
 
