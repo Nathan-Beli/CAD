@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blainville RP QC | CAD</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="site-shell">
+      <section id="portalView">
+        <nav class="topbar">
+          <a class="brand" href="./index.html">
+            <img
+              src="https://cdn.discordapp.com/icons/1482748692711866399/4ea08e27c0fd512cdbd59a882855e31a.png?size=2048"
+              alt="Logo Blainville RP QC"
+            />
+            <span>
+              <strong>Blainville RP QC</strong>
+              <small>Portail CAD</small>
+            </span>
+          </a>
+
+          <div class="session-card">
+            <span class="status-dot"></span>
+            <div>
+              <strong id="sessionName">Non connecte</strong>
+              <small id="sessionMeta">Connexion Discord requise</small>
+            </div>
+          </div>
+        </nav>
+
+        <div class="portal-grid">
+          <section class="hero-copy">
+            <p class="eyebrow">Connexion Discord</p>
+            <h1>Connecte ton compte et cree ta carte civile.</h1>
+            <p>
+              Le bot Discord detecte tes roles et affiche seulement les services CAD auxquels tu as acces.
+            </p>
+
+            <form id="civilForm" class="civil-form">
+              <label>
+                <span>Prenom</span>
+                <input id="firstName" name="firstName" placeholder="Prenom RP" required />
+              </label>
+              <label>
+                <span>Nom</span>
+                <input id="lastName" name="lastName" placeholder="Nom RP" required />
+              </label>
+              <button class="btn" type="submit">Sauvegarder carte civile</button>
+            </form>
+
+            <div class="hero-actions">
+              <button class="btn primary" id="discordLoginBtn" type="button">Connexion Discord</button>
+              <button class="btn" id="syncBtn" type="button">Verifier mes roles</button>
+              <button class="btn ghost hidden" id="logoutBtn" type="button">Deconnexion</button>
+            </div>
+            <p class="notice" id="notice">Lance le serveur CAD pour utiliser la connexion Discord.</p>
+          </section>
+
+          <aside class="access-panel">
+            <p class="eyebrow">Carte civile</p>
+            <article class="civil-card">
+              <span>Identite RP</span>
+              <strong id="civilCardName">Non creee</strong>
+              <small id="civilCardDiscord">Aucun compte Discord</small>
+            </article>
+
+            <p class="eyebrow services-title">Services disponibles</p>
+            <div id="serviceButtons" class="service-grid"></div>
+
+            <form id="erlcConfigForm" class="erlc-config">
+              <p class="eyebrow">Connexion ERLC</p>
+              <label>
+                <span>URL API ERLC</span>
+                <input id="erlcStateUrl" name="stateUrl" placeholder="https://ton-api-erlc.example/state" />
+              </label>
+              <label>
+                <span>Cle API ERLC</span>
+                <input id="erlcApiKey" name="apiKey" placeholder="Cle API / token" type="password" />
+              </label>
+              <button class="btn" type="submit">Sauvegarder ERLC</button>
+              <small id="erlcConfigStatus">Aucune API ERLC connectee.</small>
+            </form>
+          </aside>
+        </div>
+      </section>
+
+      <section class="department-login hidden" id="departmentLogin">
+        <button class="btn" id="loginBackBtn" type="button">Retour au portail</button>
+        <form id="departmentForm" class="login-panel">
+          <p class="eyebrow" id="loginServiceLabel">Service</p>
+          <h2>Identification CAD</h2>
+          <label>
+            <span>Matricule</span>
+            <input id="unitNumber" name="unitNumber" placeholder="Ex: 421" required />
+          </label>
+          <label>
+            <span>Grade</span>
+            <input id="rank" name="rank" placeholder="Ex: Agent, Sergent, Capitaine" required />
+          </label>
+          <label>
+            <span>Subdivision</span>
+            <select id="subdivision" name="subdivision"></select>
+          </label>
+          <button class="btn primary" type="submit">Entrer dans le CAD</button>
+        </form>
+      </section>
+
+      <section class="cad-screen hidden" id="cadView">
+        <header class="cad-topbar">
+          <div>
+            <p class="eyebrow" id="cadServiceLabel">Service</p>
+            <h2 id="cadTitle">CAD</h2>
+            <small id="operatorLine">Operateur non identifie</small>
+          </div>
+          <div class="cad-actions">
+            <button class="btn" id="shiftBtn" type="button">Debuter shift</button>
+            <button class="btn" id="shiftSummaryBtn" type="button">SHIFT</button>
+            <button class="btn" id="cadBackBtn" type="button">Changer service</button>
+          </div>
+        </header>
+
+        <div class="cad-grid" id="cadGrid"></div>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
